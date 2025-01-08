@@ -2,7 +2,6 @@ use crossterm::cursor::{self, Hide, MoveTo, Show};
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
 use crossterm::{queue, Command};
-use std::fmt::Display;
 use std::io::{stdout, Error, Write};
 
 #[derive(Clone, Copy)]
@@ -15,7 +14,9 @@ pub struct TerminalPosition {
     pub col: usize,
     pub row: usize,
 }
+
 pub struct Terminal;
+
 #[allow(dead_code)]
 impl Terminal {
     pub fn terminate() -> Result<(), Error> {
@@ -63,7 +64,7 @@ impl Terminal {
             height: size.1 as usize,
         })
     }
-    pub fn print<T: Display>(text: T) -> Result<(), Error> {
+    pub fn print(text: &str) -> Result<(), Error> {
         Self::queue_command(Print(text))?;
         Ok(())
     }

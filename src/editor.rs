@@ -5,13 +5,11 @@ use crossterm::event::{
     KeyCode::{self},
     KeyEvent, KeyEventKind, KeyModifiers,
 };
-use std::fmt::Display;
 use std::io::Error;
 mod terminal;
+mod view;
 use terminal::{Terminal, TerminalPosition, TerminalSize};
-
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+use view::View;
 
 #[derive(Default)]
 pub struct Location {
@@ -23,12 +21,7 @@ pub struct Location {
 pub struct Editor {
     should_quit: bool,
     location: Location,
-}
-
-impl Display for Editor {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Welcome to {} , version {}", NAME, VERSION)
-    }
+    view: View,
 }
 
 impl Editor {
@@ -107,9 +100,9 @@ impl Editor {
         Terminal::move_cursor_to(TerminalPosition::default())?;
         if self.should_quit {
             Terminal::clear_screen()?;
-            Terminal::print("Goodbye.\r\n".to_string())?;
+            Terminal::print("Goodbye.\r\n")?;
         } else {
-            Self::draw_rows()?;
+            self.view.render()?;
             Terminal::move_cursor_to(TerminalPosition {
                 col: self.location.x,
                 row: self.location.y,
@@ -117,38 +110,6 @@ impl Editor {
         }
         Terminal::show_cursor()?;
         Terminal::execute()?;
-        Ok(())
-    }
-    fn draw_welcome_message() -> Result<(), Error> {
-        let mut welcome_message = format!("{NAME} editor -- version {VERSION}");
-        let width = Terminal::size()?.width as usize;
-        let len = welcome_message.len();
-        let padding = width.saturating_sub(len) / 2;
-        let spaces = " ".repeat(padding.saturating_sub(1));
-        welcome_message = format!("~{spaces}{welcome_message}");
-        welcome_message.truncate(width);
-        Terminal::print(welcome_message)?;
-        Ok(())
-    }
-
-    fn draw_empty_row() -> Result<(), Error> {
-        Terminal::print("~")?;
-        Ok(())
-    }
-
-    fn draw_rows() -> Result<(), Error> {
-        let TerminalSize { height, .. } = Terminal::size()?;
-        for current_row in 0..height {
-            Terminal::clear_line()?;
-            if current_row == height / 3 {
-                Self::draw_welcome_message()?;
-            } else {
-                Self::draw_empty_row()?;
-            }
-            if current_row.saturating_add(1) < height {
-                Terminal::print("\r\n")?;
-            }
-        }
         Ok(())
     }
 }
